@@ -30,8 +30,8 @@ cd 311-Complaint-Resolution-Speed
 pip install -r requirements.txt
 
 # Get a Gemini API Key
-https://ai.google.dev/gemini-api/docs
-create a .env file and put GEMINI_API_KEY= *whatever your api key is*
+https://ai.google.dev/gemini-api/docs (_Documentation for getting the key_)
+create a .env file and put GEMINI_API_KEY= _whatever your api key is_
 
 # Access the dataset
 
