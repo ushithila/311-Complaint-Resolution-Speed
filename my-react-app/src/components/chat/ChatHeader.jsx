@@ -1,6 +1,6 @@
 import { Download, MoreHorizontal } from "lucide-react";
  
-export default function ChatHeader({ title = "New prediction", subtitle = "Describe a 311 complaint" }) {
+function ChatHeader({ title = "New prediction", subtitle = "Describe a 311 complaint" }) {
   return (
     <div className="flex items-center justify-between border-b border-slate-200 px-6 py-3">
       <div>
@@ -14,3 +14,5 @@ export default function ChatHeader({ title = "New prediction", subtitle = "Descr
     </div>
   );
 }
+
+export default ChatHeader
