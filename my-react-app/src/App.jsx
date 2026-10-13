@@ -1,13 +1,10 @@
 import { useState } from 'react'
-import ChatPanel from './components/chat/ChatPanel'
 import './App.css'
+import ChatHeader from './components/chat/ChatHeader'
 
 function App() {
-
   return (
-    <div>
-      <ChatPanel />
-    </div>
+    <ChatHeader />
   )
 }
 
