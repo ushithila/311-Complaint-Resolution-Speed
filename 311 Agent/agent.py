@@ -123,10 +123,10 @@ def parse_question(question: str):
     )
     return Query.model_validate_json(response.text)
 
-if __name__ == "__main__":
-    #question = "A streetlight is completely out at 31st Ave and 34th St in Astoria, Queens. It's on the northwest corner and the block is very dark at night."
-    #question = "There's a party going on at E 68th St in Manhattan, NY. It's super loud and I'm trying to get some sleep"
-    #question = "There is no hot water in this building in 21st Ave in Brooklyn. NY. Water is freezing cold."
-    result = parse_question(question)
+# if __name__ == "__main__":
+#     #question = "A streetlight is completely out at 31st Ave and 34th St in Astoria, Queens. It's on the northwest corner and the block is very dark at night."
+#     #question = "There's a party going on at E 68th St in Manhattan, NY. It's super loud and I'm trying to get some sleep"
+#     #question = "There is no hot water in this building in 21st Ave in Brooklyn. NY. Water is freezing cold."
+#     result = parse_question(question)
 
-    print(result)
+#     print(result)

@@ -1,3 +1,5 @@
 google-genai
 pydantic
 python-dotenv
+fastapi
+uvicorn[standard]
