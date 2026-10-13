@@ -2,7 +2,7 @@ import { ArrowUp, MapPin, Paperclip } from "lucide-react";
 
 function InputBar( { value, onChange, onSend, disabled } ){
     return (
-        <div className="border-t border-slate-200 p-4">
+        <div className="mt-auto border-t border-slate-200 p-4">
             <div className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 focus-within:border-brand">
                 <button aria-label="Attach a photo" className="text-slate-500"><Paperclip size={16} /></button>
                 <button aria-label="Add a location" className="text-slate-500"><MapPin size={16} /></button>

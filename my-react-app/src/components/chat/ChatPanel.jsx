@@ -17,7 +17,7 @@ function ChatPanel( { messages, loading = false, error = "", onSend, title, subt
   }
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col bg-white">
+    <section className="flex h-screen min-w-0 flex-1 flex-col bg-white">
       <ChatHeader title={title} subtitle={subtitle} />
       <InputBar value={draft} onChange={setDraft} onSend={send} disabled={loading} />
     </section>
