@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import './App.css'
 import ChatPanel from './components/chat/ChatPanel'
-import SideBar from './components/Sidebar'
+import Sidebar from './components/Sidebar'
 
 function App() {
   return (
-    <>
-    <SideBar />
-    <ChatPanel />
-    </>
+    <div className="flex h-screen">
+      <Sidebar />
+      <ChatPanel />
+    </div>
   )
 }
 
