@@ -1,5 +1,5 @@
 // All communication with the FastAPI backend lives here.
-const USE_MOCK = true; // change to false when the backend is running
+const USE_MOCK = false; // change to false when the backend is running
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 const MOCK_RESPONSE = {
@@ -13,11 +13,14 @@ export async function sendMessage(text) {
     return MOCK_RESPONSE;
   }
 
-  const res = await fetch(`${API_URL}/chat`, {
+  const res = await fetch(`${API_URL}/api/parse`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text }),
+    body: JSON.stringify({ question : text }),
   });
-  if (!res.ok) throw new Error(`Request failed (${res.status})`);
-  return res.json(); // { reply, prediction }
+
+  const data = await res.json()
+
+  if (!res.ok) throw new Error(data.detail ?? `Request failed (${res.status})`);
+  return data; // { reply, prediction }
 }

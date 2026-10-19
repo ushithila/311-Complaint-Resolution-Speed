@@ -17,10 +17,10 @@ function App() {
     setLoading(true)
     setError("")
     try {
-      const { reply } = await sendMessage(text)
-      setMessages((m) => [...m, { role: "assistant", type: "prediction", text: reply }])
-    } catch {
-      setError("Couldn't get a prediction. Try again.")
+      const reply = await sendMessage(text)
+      setMessages((m) => [...m, { role: "assistant", type: "prediction", text: JSON.stringify(reply, null, 2), }])
+    } catch (err) {
+      setError(err.message)
     } finally {
       setLoading(false)
     }
