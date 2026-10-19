@@ -1,6 +1,15 @@
-function AssistantMessage( { text, time, info = [], onInfoClick } ){
+export function Avatar() {
+  return (
+    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy text-[10px] font-bold text-white">
+      311
+    </div>
+  )
+}
+
+function AssistantMessage( { text, time, chips = [], onChipClick } ){
   return (
     <div className="flex gap-3">
+      <Avatar />
       <div className="max-w-[75%]">
         <p className="mb-1 text-xs text-slate-500">
           NYC 311 Prediction Assistant{time && ` · ${time}`}
@@ -19,7 +28,7 @@ function AssistantMessage( { text, time, info = [], onInfoClick } ){
           )}
         </div>
       </div>
-    </div> 
+    </div>
   )
 }
 

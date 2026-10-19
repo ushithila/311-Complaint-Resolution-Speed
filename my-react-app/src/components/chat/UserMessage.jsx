@@ -1,6 +1,6 @@
 import { MapPin } from "lucide-react"
 
-function UserMessage ({message, time, location}){
+function UserMessage ({text, time, location}){
   return ( 
     <div className="flex flex-col items-end">
       <p className="mb-1 text-xs text-slate-500">You{time && ` · ${time}`}</p>

@@ -1,20 +1,21 @@
 import { useEffect, useRef } from "react";
 import AssistantMessage from "./AssistantMessage";
 import UserMessage from "./UserMessage";
+import PredictionCard from "./PredictionCard";
 
-const Intro = {
+const INTRO = {
     text: "Describe the issue and where it occurred. I'll estimate how quickly a similar 311 complaint is likely to be resolved.",
-    info: ["street condition", "noise", "sanitation"],
+    chips: ["street condition", "noise", "sanitation"],
 }
 
-function renderMessage(message, infoClick) {
-    if(message.role === 'user') return <UserMessage {...message} />
-    if(message.role === 'prediction') return <PredictionCard {...message} />
-    return <AssistantMessage {...message} infoClick={infoClick} />
+function renderMessage(message, onChipClick) {
+    if (message.role === "user") return <UserMessage {...message} />
+    if (message.type === "prediction") return <PredictionCard {...message} />
+    return <AssistantMessage {...message} onChipClick={onChipClick} />
 }
 
-function MessageHistory( { messages, loading, error, onInfoClick } ){
-    const endRed = useRef(null)
+function MessageHistory( { messages = [], loading, error, onChipClick } ){
+    const endRef = useRef(null)
 
     useEffect(() => {
         endRef.current?.scrollIntoView?.({ behavior: "smooth" });
