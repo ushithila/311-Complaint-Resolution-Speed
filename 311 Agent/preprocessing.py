@@ -1,5 +1,6 @@
 """
-Maps user input to known categories for complaint_type and location_type. If the user input is not in the known categories, it is mapped to 'other' (or 'not specified' for location_type).
+Helper functions to map user input to known categories for complaint_type and location_type. If the user input is not in the known categories, it is mapped to 'other' (or 'not specified' for location_type).
+It also derives time features (time_of_day, season, is_weekend) from the current time.
 """
 
 from datetime import datetime
@@ -26,8 +27,6 @@ def _time_of_day(hour):
 
 
 def derive_time_features(now=None):
-    """time_of_day/season/is_weekend for a live prediction - these describe
-    when the complaint is being filed, not something the question states."""
     now = now or datetime.now()
     return {
         'time_of_day': _time_of_day(now.hour),
@@ -72,7 +71,7 @@ def clean_agency(raw):
 
 def clean_complaint_type(raw, known_categories):
     if not raw:
-        return None
+        return 'other'
     value = merge(raw.lower().strip(), COMPLAINT_TYPE_MERGES)
     return value if value in known_categories else 'other'
 
