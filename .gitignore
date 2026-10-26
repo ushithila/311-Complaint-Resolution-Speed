@@ -2,3 +2,6 @@
 __pycache__/
 *.py[cod]
 .venv/
+dataset/*.csv
+dataset/*.npz
+dataset/*.joblib

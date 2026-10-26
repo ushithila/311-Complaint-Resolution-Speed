@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 import re
 
 from agent import Query, parse_question
+from predictor import predict_resolution_hours
 
 KEYWORDS = {
     "complaint", "311", "nyc", "nyc 311",
@@ -50,6 +51,9 @@ class QuestionRequest(BaseModel):
         description="The user's question",
     )
 
+class PredictionResponse(BaseModel):
+    hours: float
+
 @app.get("/")
 def home():
     return {"message": "NYC 311 Complaint Assistant API is running"}
@@ -81,3 +85,33 @@ def parse_complaint(request: QuestionRequest):
             status_code=502,
             detail='The AI service failed to process your question',
         )
+
+@app.post("/api/predict", response_model=PredictionResponse)
+def predict_complaint(request: QuestionRequest):
+    question = request.question.strip()
+
+    if not question:
+        raise HTTPException(
+            status_code=400,
+            detail="Question cannot be empty.",
+        )
+
+    try:
+        query = parse_question(question)
+    except Exception:
+        logger.exception("Failed to parse NYC 311 question")
+        raise HTTPException(
+            status_code=502,
+            detail='The AI service failed to process your question',
+        )
+
+    try:
+        hours = predict_resolution_hours(query)
+    except Exception:
+        logger.exception("Failed to predict resolution time")
+        raise HTTPException(
+            status_code=502,
+            detail='Failed to generate a prediction',
+        )
+
+    return PredictionResponse(hours=hours)
