@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 import re
 
 from agent import Query, parse_question
-from predictor import predict_resolution_hours, format_duration
+from predictor import predict_resolution_range, format_duration_range
 
 KEYWORDS = {
     "complaint", "311", "nyc", "nyc 311",
@@ -52,7 +52,9 @@ class QuestionRequest(BaseModel):
     )
 
 class PredictionResponse(BaseModel):
-    hours: float
+    low: float
+    median: float
+    high: float
     estimate: str
 
 @app.get("/")
@@ -97,6 +99,12 @@ def predict_complaint(request: QuestionRequest):
             detail="Question cannot be empty.",
         )
 
+    if not is_question(question):
+        raise HTTPException(
+            status_code=400,
+            detail="Please ask a question about an NYC 311 complaint."
+        )
+
     try:
         query = parse_question(question)
     except Exception:
@@ -107,7 +115,7 @@ def predict_complaint(request: QuestionRequest):
         )
 
     try:
-        hours = predict_resolution_hours(query)
+        low, median, high = predict_resolution_range(query)
     except Exception:
         logger.exception("Failed to predict resolution time")
         raise HTTPException(
@@ -115,4 +123,7 @@ def predict_complaint(request: QuestionRequest):
             detail='Failed to generate a prediction',
         )
 
-    return PredictionResponse(hours=hours, estimate=format_duration(hours))
+    return PredictionResponse(
+        low=low, median=median, high=high,
+        estimate=format_duration_range(low, high),
+    )
