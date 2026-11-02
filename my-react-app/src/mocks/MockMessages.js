@@ -14,14 +14,35 @@ export const chatMessages = [
     type: "text",
     time: "10:42 AM",
     text: "A streetlight is completely out at 31st Ave and 34th St in Astoria, Queens. It's on the northwest corner and the block is very dark at night.",
-    location: "31st Ave & 34th St · Queens, NY 11106",
   },
   {
     id: 3,
     role: "assistant",
-    type: "prediction",
+    type: "message",
+    time: "10:43 PM",
+    text: "Where is the streetlight? Please share the nearest address or intesection and borough",
+  },
+  {
+    id: 4,
+    role: "user",
+    type: "message",
+    time: "10:44 PM",
+    text: "31st Ave and 34th St in Astoria, Queens, on the northwest corner.",
+    location: "31st Ave & 34th St · Queens, NY 11106",
+  },
+  {
+    id: 5, 
+    role: "assistant", 
+    type: "form", 
     time: "just now",
-    text: "Based on comparable streetlight complaints in Astoria, this issue is likely to be resolved within 3–5 business days. Most similar cases are routed directly to the Department of Transportation.",
+    question: "How was the complaint filed?",
+    helper: "Select one filing channel, then submit to continue.",
+    options: [
+      { value: "website", label: "Online · NYC 311 website" },
+      { value: "mobile", label: "NYC 311 mobile app" },
+      { value: "phone", label: "Phone · 311" },
+      { value: "other", label: "Other / not sure" },
+    ],
   },
 ];
  

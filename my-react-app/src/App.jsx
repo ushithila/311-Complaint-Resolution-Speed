@@ -31,7 +31,7 @@ function App() {
       <Header />
       <main className="flex min-h-0 flex-1">
         <Sidebar />
-        <ChatPanel messages={messages} loading={loading} error={error} onSend={handleSend} />
+        <ChatPanel messages={messages} loading={loading} error={error} onSend={handleSend} onFormSubmit={(option) => handleSend(option.label)} />
       </main>
     </div>
   )

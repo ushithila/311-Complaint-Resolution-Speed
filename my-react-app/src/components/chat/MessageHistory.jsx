@@ -2,15 +2,17 @@ import { useEffect, useRef } from "react";
 import AssistantMessage from "./AssistantMessage";
 import UserMessage from "./UserMessage";
 import PredictionCard from "./PredictionCard";
+import ChoiceForm from "./QuestionareChoice"
 
 const INTRO = {
     text: "Describe the issue and where it occurred. I'll estimate how quickly a similar 311 complaint is likely to be resolved.",
     chips: ["street condition", "noise", "sanitation"],
 }
 
-function renderMessage(message, onChipClick) {
+function renderMessage(message, onChipClick, onFormSubmit) {
     if (message.role === "user") return <UserMessage {...message} />
     if (message.type === "prediction") return <PredictionCard {...message} />
+    if (message.type === "form") return <ChoiceForm {...message} onSubmit={onFormSubmit} />
     return <AssistantMessage {...message} onChipClick={onChipClick} />
 }
 
