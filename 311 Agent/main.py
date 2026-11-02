@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 import re
 
 from agent import Query, parse_question
-from predictor import predict_resolution_hours
+from predictor import predict_resolution_hours, format_duration
 
 KEYWORDS = {
     "complaint", "311", "nyc", "nyc 311",
@@ -53,6 +53,7 @@ class QuestionRequest(BaseModel):
 
 class PredictionResponse(BaseModel):
     hours: float
+    estimate: str
 
 @app.get("/")
 def home():
@@ -114,4 +115,4 @@ def predict_complaint(request: QuestionRequest):
             detail='Failed to generate a prediction',
         )
 
-    return PredictionResponse(hours=hours)
+    return PredictionResponse(hours=hours, estimate=format_duration(hours))
