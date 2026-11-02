@@ -16,7 +16,8 @@ function renderMessage(message, onChipClick, onFormSubmit) {
     return <AssistantMessage {...message} onChipClick={onChipClick} />
 }
 
-function MessageHistory( { messages = [], loading, error, onChipClick } ){
+
+function MessageHistory( { messages = [], loading, error, onChipClick, onFormSubmit } ){
     const endRef = useRef(null)
 
     useEffect(() => {
@@ -27,7 +28,7 @@ function MessageHistory( { messages = [], loading, error, onChipClick } ){
         <div role="log" aria-live="polite" className="flex-1 space-y-5 overflow-y-auto p-6">
             {messages.length === 0 && <AssistantMessage {...INTRO} onChipClick={onChipClick} />}
             {messages.map((m, i) => (
-                <div key={m.id ?? i}>{renderMessage(m, onChipClick)}</div>
+                <div key={m.id ?? i}>{renderMessage(m, onChipClick, onFormSubmit)}</div>
             ))}
             {loading && <p className="text-sm text-slate-500">Estimating resolution time…</p>}
             {error && <p role="alert" className="text-sm text-red-600">{error}</p>}

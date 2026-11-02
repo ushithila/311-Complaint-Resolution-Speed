@@ -12,12 +12,12 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  async function handleSend(text) {
+  async function handleSend(text, extra = {}) {
     setMessages((m) => [...m, { role: "user", text }])
     setLoading(true)
     setError("")
     try {
-      const { reply } = await sendMessage(text)
+      const { reply } = await sendMessage(text, extra)
       setMessages((m) => [...m, { role: "assistant", type: "prediction", text: reply }])
     } catch {
       setError("Couldn't get a prediction. Try again.")
@@ -31,7 +31,7 @@ function App() {
       <Header />
       <main className="flex min-h-0 flex-1">
         <Sidebar />
-        <ChatPanel messages={messages} loading={loading} error={error} onSend={handleSend} onFormSubmit={(option) => handleSend(option.label)} />
+        <ChatPanel messages={messages} loading={loading} error={error} onSend={handleSend} onFormSubmit={(option) => handleSend(option.label, { filing_channel: option.value }) } />
       </main>
     </div>
   )

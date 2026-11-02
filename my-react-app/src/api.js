@@ -7,7 +7,7 @@ const MOCK_RESPONSE = {
   prediction: { estimate: "3–5 business days", confidence: 82 },
 };
 
-export async function sendMessage(text) {
+export async function sendMessage(text, extra = {}) {
   if (USE_MOCK) {
     await new Promise((resolve) => setTimeout(resolve, 800));
     return MOCK_RESPONSE;
@@ -16,7 +16,7 @@ export async function sendMessage(text) {
   const res = await fetch(`${API_URL}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text }),
+    body: JSON.stringify({ message: text , ... extra}),
   });
   if (!res.ok) throw new Error(`Request failed (${res.status})`);
   return res.json(); // { reply, prediction }

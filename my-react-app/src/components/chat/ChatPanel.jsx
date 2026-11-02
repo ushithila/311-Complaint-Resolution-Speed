@@ -4,7 +4,8 @@ import ChatHeader from "./ChatHeader"
 import MessageHistory from "./MessageHistory"
 import InputBar from "./Inputbar"
 
-function ChatPanel( { messages = [], loading = false, error = "", onSend, onFormSubmit, title, subtitle }){
+
+function ChatPanel( { messages = [], loading = false, error = "", onSend, onFormSubmit, title, subtitle }){  
   const [draft, setDraft] = useState("")
 
   function send() {
