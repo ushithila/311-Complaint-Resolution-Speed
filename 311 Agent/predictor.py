@@ -80,3 +80,36 @@ def get_parser_categories():
             "Open Data Channel Type"
         ].tolist(),
     }
+
+def pluralize_s(n, unit):
+    "1 unit -> 2 units"
+    return f"{n} {unit}" if n == 1 else f"{n} {unit}s"
+
+
+def format_duration(hours):
+    """Converts raw hours into a readable format"""
+    if hours < 1 / 60:
+        return "less than a minute"
+
+    minutes = round(hours * 60)
+    #less than an hour
+    if minutes < 60:
+        return f"about {pluralize_s(minutes, 'minute')}"
+
+    hrs = round(hours)
+    # less than a day
+    if hrs < 24:
+        return f"about {pluralize_s(hrs, 'hour')}"
+
+    days = round(hours / 24)
+    #less than a week
+    if days < 7:
+        return f"about {pluralize_s(days, 'day')}"
+
+    weeks = round(hours / (24 * 7))
+    # less than a month
+    if hours < 24 * 30:
+        return f"about {pluralize_s(weeks, 'week')}"
+
+    months = round(hours / (24 * 30))
+    return f"about {pluralize_s(months, 'month')}"

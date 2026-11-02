@@ -33,7 +33,7 @@ function App() {
           {
             role: "assistant",
             type: "prediction",
-            text: `Estimated resolution time: ${prediction.hours.toFixed(1)} hours`,
+            text: `Estimated resolution time: ${prediction.estimate}`,
           },
         ])
         setQuery(null)

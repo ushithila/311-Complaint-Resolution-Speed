@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from agent import Query, parse_question
-from predictor import predict_resolution_hours, get_parser_categories
+from predictor import predict_resolution_hours, get_parser_categories, format_duration
 
 app = FastAPI(
     title="NYC 311 Complaint Assistant AI",
@@ -75,6 +75,7 @@ def debug_print(label: str, **data):
 
 class PredictionResponse(BaseModel):
     hours: float
+    estimate: str
 
 class PredictionRequest(BaseModel):
     query: Query
@@ -202,4 +203,4 @@ def predict_complaint(request: PredictionRequest):
             detail="Failed to generate a prediction.",
         )
 
-    return PredictionResponse(hours=hours)
+    return PredictionResponse(hours=hours, estimate=format_duration(hours))

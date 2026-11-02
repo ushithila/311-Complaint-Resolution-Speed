@@ -58,9 +58,7 @@ def parse_question(question: str, current_query: Query | None = None,) -> Query:
     {json.dumps(categories["location_type"])}
 
     open_data_channel_type: how the complaint was submitted. Choose exactly
-    from this list when the user states or clearly implies it (for example,
-    "I called 311" -> the phone option, "I reported it on the app" -> the
-    mobile option, "I filed it on the website" -> the online option).
+    from this list when the user states or clearly implies it,
     Use null if the message gives no indication of how it was submitted.
     Do not guess based on the type of complaint alone.
     {json.dumps(categories["open_data_channel_type"])}
