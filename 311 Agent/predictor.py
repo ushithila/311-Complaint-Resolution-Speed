@@ -33,7 +33,6 @@ with open(MODEL_PATH, 'rb') as f:
 
 KNOWN_CATEGORIES = dict(zip(CATEGORICAL_COLS, encoder.categories_))
 
-
 def build_feature_row(query, now=None):
     """query: the agent's Query object (or anything with the same attributes)."""
     time_features = derive_time_features(now)
@@ -69,3 +68,15 @@ def predict_resolution_hours(query, now=None):
 
     prediction = model.predict(encoded, num_iteration=model.best_iteration)[0]
     return max(float(prediction), 0.0)
+
+def get_parser_categories():
+    return {
+        "complaint_type": KNOWN_CATEGORIES[
+            "Problem (formerly Complaint Type)"
+        ].tolist(),
+        "agency": KNOWN_CATEGORIES["Agency"].tolist(),
+        "location_type": KNOWN_CATEGORIES["Location Type"].tolist(),
+        "open_data_channel_type": KNOWN_CATEGORIES[
+            "Open Data Channel Type"
+        ].tolist(),
+    }
