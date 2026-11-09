@@ -51,7 +51,6 @@ for m, label in [(model, 'model'), (model_low, 'model_low'), (model_high, 'model
 
 KNOWN_CATEGORIES = dict(zip(CATEGORICAL_COLS, encoder.categories_))
 
-
 def build_feature_row(query, now=None):
     """query: the agent's Query object (or anything with the same attributes)."""
     time_features = derive_time_features(now)
@@ -103,6 +102,17 @@ def predict_resolution_range(query, now=None):
     low, median, high = sorted([low, median, high])
     return low, median, high
 
+def get_parser_categories():
+    return {
+        "complaint_type": KNOWN_CATEGORIES[
+            "Problem (formerly Complaint Type)"
+        ].tolist(),
+        "agency": KNOWN_CATEGORIES["Agency"].tolist(),
+        "location_type": KNOWN_CATEGORIES["Location Type"].tolist(),
+        "open_data_channel_type": KNOWN_CATEGORIES[
+            "Open Data Channel Type"
+        ].tolist(),
+    }
 
 def pluralize_s(n, unit):
     "1 unit -> 2 units"

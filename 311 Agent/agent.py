@@ -1,127 +1,91 @@
+import json
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from enum import Enum
 
-class ComplaintType(str, Enum):
-    ILLEGAL_PARKING = "Illegal Parking"
-    NOISE_RESIDENTIAL = "Noise - Residential"
-    HEAT_HOT_WATER = "HEAT/HOT WATER"
-    BLOCKED_DRIVEWAY = "Blocked Driveway"
-    NOISE_STREET_SIDEWALK = "Noise - Street/Sidewalk"
-    UNSANITARY_CONDITION = "UNSANITARY CONDITION"
-    STREET_CONDITION = "Street Condition"
-    PLUMBING = "PLUMBING"
-    ABANDONED_VEHICLE = "Abandoned Vehicle"
-    WATER_SYSTEM = "Water System"
-    DIRTY_CONDITION = "Dirty Condition"
-    PAINT_PLASTER = "PAINT/PLASTER"
-    SNOW_ICE = "Snow or Ice"
-    NOISE_COMMERCIAL = "Noise - Commercial"
-    NOISE = "Noise"
-    TRAFFIC_SIGNAL = "Traffic Signal Condition"
-    NOISE_VEHICLE = "Noise - Vehicle"
-    DOOR_WINDOW = "DOOR/WINDOW"
-    ENCAMPMENT = "Encampment"
-    WATER_LEAK = "WATER LEAK"
-
-class Borough(str, Enum):
-    BROOKLYN = "BROOKLYN"
-    QUEENS = "QUEENS"
-    BRONX = "BRONX"
-    MANHATTAN = "MANHATTAN"
-    STATEN_ISLAND = "STATEN ISLAND"
-
-class Agency(str, Enum):
-    NYPD = "NYPD"
-    HPD = "HPD"
-    DSNY = "DSNY"
-    DOT = "DOT"
-    DEP = "DEP"
-    DOB = "DOB"
-    DPR = "DPR"
-    DOHMH = "DOHMH"
-    DHS = "DHS"
-    DCWP = "DCWP"
-    TLC = "TLC"
-    OOS = "OOS"
-    DOE = "DOE"
-    NYC311_PRD = "NYC311-PRD"
-    OTI = "OTI"
-    EDC = "EDC"
+from predictor import get_parser_categories
 
 class Query(BaseModel):
-    complaint_type: ComplaintType | None = None
-    complaint_detail: str | None = None
-    agency: Agency | None = None
-    borough: Borough | None = None
+    complaint_type: str | None = None
+    agency: str | None = None
     location_type: str | None = None
-    incident_zip: str | None = None
-
+    open_data_channel_type: str | None = None
+    #borough: Borough | None = None
+    #incident_zip: str | None = None
+    #complaint_detail: str | None = None
 
 load_dotenv()
 client = genai.Client()
 
-def parse_question(question: str):
+def _validate_categories(query: Query) -> Query:
+    categories = get_parser_categories()
+    data = query.model_dump()
+    for field in ("complaint_type", "agency", "location_type", "open_data_channel_type"):
+        valid = [c for c in categories[field] if c.upper() != "UNKNOWN"]
+        lookup = {c.lower(): c for c in valid}
+        value = data[field]
+        data[field] = lookup.get(value.strip().lower()) if value else None
+    return Query(**data)
+
+def parse_question(question: str, current_query: Query | None = None,) -> Query:
+    existing = (current_query or Query()).model_dump()
+    categories = get_parser_categories()
+
+    prompt = f"""
+    You are a NYC 311 complaint question parser.
+    Update the existing query using the user's latest message.
+
+    EXISTING QUERY:
+    {json.dumps(existing)}
+
+    USER'S LATEST MESSAGE:
+    {question}
+
+    FIELD RULES:
+
+    complaint_type: the closest match from this list, exactly as written,
+    or null if the message doesn't describe a 311 issue.
+    {json.dumps(categories["complaint_type"])}
+
+    agency: ALWAYS infer the responsible NYC agency from the complaint_type,
+    choosing exactly from this list. Re-derive it whenever complaint_type
+    changes. Use null only if complaint_type is null.
+    {json.dumps(categories["agency"])}
+
+    location_type: the type of location, chosen exactly from this list,
+    or null if it is not stated or clearly implied.
+    {json.dumps(categories["location_type"])}
+
+    open_data_channel_type: how the complaint was submitted. Choose exactly
+    from this list when the user states or clearly implies it,
+    Use null if the message gives no indication of how it was submitted.
+    Do not guess based on the type of complaint alone.
+    {json.dumps(categories["open_data_channel_type"])}
+
+    IMPORTANT:
+    - Preserve existing values unless the user gives new information or a correction.
+    - Never invent complaint_type or location_type. Use null if unknown.
+    - Return only the four schema fields.
+    """
+
     response = client.models.generate_content(
         model="gemini-3.1-flash-lite",
-        contents=
-            f"""
-            You are a NYC 311 question parser.
-
-            Your job is to convert a user's natural language questions into structured information
-            about a 311 complaint.
-
-            Only extract information that is stated or strongly supported by
-            the user's question.
-
-            If information is missing or cannot be determined, return null.
-            Never invent information.
-
-            FIELD RULES:
-
-            complaint_type:
-            Map the user's problem to the closest matching NYC 311 "Problem"
-            value from the allowed values in the schema.
-
-            complaint_detail:
-            Extract the specific detail of the problem when it is clear.
-
-            agency:
-            Only provide an agency when:
-            1. The user explicitly names the agency, OR
-            2. The agency is an extremely clear and direct match to the complaint.
-
-            borough:
-            Extract the borough when the user provides it.
-
-            location_type:
-            Extract the type of location when the user provides enough information
-            to determine it.
-
-            incident_zip:
-            Extract the ZIP code only when the user provides it.
-            Do not derive a ZIP code from an address.
-
-            IMPORTANT:
-            - Do not invent missing fields.
-            - Do not guess a ZIP code.
-            - Do not guess an agency.
-            - Do not confuse an address with a ZIP code.
-            - Preserve the dataset's exact complaint_type formatting.
-            - Use null when uncertain.
-
-            User question:
-            {question}
-            """,
+        contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
-            response_schema=Query.model_json_schema(),
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+            response_schema=Query,
         ),
     )
-    return Query.model_validate_json(response.text)
+    parsed = Query.model_validate_json(response.text)
+
+    if parsed.open_data_channel_type is None:
+        parsed.open_data_channel_type = existing["open_data_channel_type"]
+
+    return _validate_categories(parsed)
+
+
+
 
 # if __name__ == "__main__":
 #     #question = "A streetlight is completely out at 31st Ave and 34th St in Astoria, Queens. It's on the northwest corner and the block is very dark at night."
