@@ -25,7 +25,7 @@ MODEL_HIGH_PATH = os.path.join(REPO_ROOT, 'model', 'model_high.pkl')
 # Same order the model was trained on (feature_selection.ipynb / modeling.ipynb).
 CATEGORICAL_COLS = [
     'Problem (formerly Complaint Type)', 'Agency', 'Location Type',
-    'Open Data Channel Type', 'time_of_day', 'season',
+    'Open Data Channel Type', 'time_of_day',
 ]
 FEATURE_COLS = CATEGORICAL_COLS + ['is_weekend']
 
@@ -71,7 +71,6 @@ def build_feature_row(query, now=None):
             KNOWN_CATEGORIES['Open Data Channel Type'],
         ),
         'time_of_day': time_features['time_of_day'],
-        'season': time_features['season'],
         'is_weekend': time_features['is_weekend'],
     }
     return pd.DataFrame([row], columns=FEATURE_COLS)
