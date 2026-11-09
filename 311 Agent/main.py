@@ -5,7 +5,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from agent import Query, parse_question
-from predictor import predict_resolution_hours, get_parser_categories, format_duration
+from predictor import predict_resolution_range, get_parser_categories, format_duration_range
+
+KEYWORDS = {
+    "complaint", "311", "nyc", "nyc 311",
+    "noise", "loud", "parking", "driveway",
+    "street", "sidewalk", "pothole", "streetlight",
+    "light", "heat", "hot water", "water",
+    "trash", "garbage", "sanitation", "building",
+    "construction", "blocked", "hydrant", "rat",
+    "mice", "rodent", "sewer", "leak", "plumbing",
+    "traffic", "tree", "graffiti", "electric",
+    "elevator", "apartment", "landlord", "heat",
+    "resolve", "resolution", "repair", "broken",
+    "take", "long", "status", "report", "service",
+}
+
+def is_question(question: str) -> bool:
+    words = set(re.findall(r"[a-z0-9]+", question.lower()))
+    return bool(words & KEYWORDS)
 
 app = FastAPI(
     title="NYC 311 Complaint Assistant AI",
@@ -74,7 +92,9 @@ def debug_print(label: str, **data):
     print("=" * (len(label) + 12))
 
 class PredictionResponse(BaseModel):
-    hours: float
+    low: float
+    median: float
+    high: float
     estimate: str
 
 class PredictionRequest(BaseModel):
@@ -185,6 +205,17 @@ def predict_complaint(request: PredictionRequest):
 
     missing_fields = get_missing_fields(query)
 
+    if not is_question(question):
+        raise HTTPException(
+            status_code=400,
+            detail="Please ask a question about an NYC 311 complaint."
+        )
+
+    try:
+        query = parse_question(question)
+    except Exception:
+        logger.exception("Failed to parse NYC 311 question")
+        
     if missing_fields:
         raise HTTPException(
             status_code=422,
@@ -195,7 +226,7 @@ def predict_complaint(request: PredictionRequest):
         )
 
     try:
-        hours = predict_resolution_hours(query)
+        low, median, high = predict_resolution_range(query)
     except Exception:
         logger.exception("Failed to predict resolution time")
         raise HTTPException(
@@ -203,4 +234,7 @@ def predict_complaint(request: PredictionRequest):
             detail="Failed to generate a prediction.",
         )
 
-    return PredictionResponse(hours=hours, estimate=format_duration(hours))
+    return PredictionResponse(
+        low=low, median=median, high=high,
+        estimate=format_duration_range(low, high),
+    )
