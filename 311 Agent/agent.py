@@ -5,6 +5,7 @@ from google import genai
 from google.genai import types
 
 from predictor import get_parser_categories
+from comparisons import BOROUGH_VALUES, compare_resolution_times, format_comparison_message
 
 class Query(BaseModel):
     complaint_type: str | None = None
@@ -85,6 +86,52 @@ def parse_question(question: str, current_query: Query | None = None,) -> Query:
     return _validate_categories(parsed)
 
 
+def answer_comparison(question: str) -> dict | None:
+    """Returns a comparison result if the question asks to compare/rank historical
+    resolution times across boroughs/agencies/complaint types/location types."""
+    categories = get_parser_categories()
+
+    prompt = f"""
+    You help with NYC 311 resolution-time questions. Call compare_resolution_times
+    ONLY if the user is asking to compare or rank HISTORICAL resolution times across
+    boroughs, agencies, complaint types, or location types (e.g. "which borough is
+    slowest for noise complaints", "compare DOB vs DEP"). Do NOT call it if the
+    message is about a single specific complaint someone wants a time estimate for.
+
+    USER MESSAGE:
+    {question}
+
+    Valid complaint_type values: {json.dumps(categories["complaint_type"])}
+    Valid agency values: {json.dumps(categories["agency"])}
+    Valid location_type values: {json.dumps(categories["location_type"])}
+    Valid borough values: {json.dumps(BOROUGH_VALUES)}
+    """
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                tools=[compare_resolution_times],
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+            ),
+        )
+    except Exception:
+        return None
+
+    calls = response.function_calls or []
+    if not calls:
+        return None
+
+    try:
+        result = compare_resolution_times(**calls[0].args)
+        return {
+            "message": format_comparison_message(result),
+            "group_by": result["group_by"],
+            "breakdown": result["results"],
+        }
+    except Exception:
+        return None
 
 
 # if __name__ == "__main__":
