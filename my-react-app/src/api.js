@@ -17,11 +17,11 @@ async function parseResponse(res) {
   return data;
 }
 
-export async function sendMessage(text, query = null, pending_field = null) {
+export async function sendMessage(text, query = null, pending_field = null, confirmed = false) {
   const res = await fetch(`${API_URL}/api/parse`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: text, query, pending_field }),
+    body: JSON.stringify({ question: text, query, pending_field, confirmed }),
   });
   return parseResponse(res);
 }
