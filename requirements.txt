@@ -1,0 +1,7 @@
+google-genai
+pydantic
+python-dotenv
+fastapi
+uvicorn[standard]
+lightgbm
+scikit-learn
