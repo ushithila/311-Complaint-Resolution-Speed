@@ -23,22 +23,19 @@ MODEL_LOW_PATH = os.path.join(REPO_ROOT, 'model', 'model_low.pkl')
 MODEL_HIGH_PATH = os.path.join(REPO_ROOT, 'model', 'model_high.pkl')
 
 # Same order the model was trained on (feature_selection.ipynb / modeling.ipynb).
-CATEGORICAL_COLS = [
-    'Problem (formerly Complaint Type)', 'Agency', 'Location Type',
-    'Open Data Channel Type', 'time_of_day',
-]
+CATEGORICAL_COLS = ['Problem (formerly Complaint Type)', 'Agency', 'Location Type', 'Open Data Channel Type', 'time_of_day']
 FEATURE_COLS = CATEGORICAL_COLS + ['is_weekend']
 
 
-def _load_model(path):
+def load_model(path):
     with open(path, 'rb') as f:
         return pickle.load(f)
 
 
 encoder = joblib.load(ENCODER_PATH)
-model = _load_model(MODEL_PATH)
-model_low = _load_model(MODEL_LOW_PATH)
-model_high = _load_model(MODEL_HIGH_PATH)
+model = load_model(MODEL_PATH)
+model_low = load_model(MODEL_LOW_PATH)
+model_high = load_model(MODEL_HIGH_PATH)
 
 # columns order guard
 expected_feature_names = [c.replace(' ', '_') for c in FEATURE_COLS]
@@ -60,7 +57,7 @@ def build_feature_row(query, now=None):
             getattr(query, 'complaint_type', None),
             KNOWN_CATEGORIES['Problem (formerly Complaint Type)'],
         ),
-        'Agency': clean_agency(getattr(query, 'agency', None)),
+        'Agency': clean_agency(getattr(query, 'agency', None), KNOWN_CATEGORIES['Agency']),
         'Location Type': clean_location_type(
             getattr(query, 'location_type', None),
             KNOWN_CATEGORIES['Location Type'],
@@ -93,8 +90,7 @@ def predict_resolution_hours(query, now=None):
 
 
 def predict_resolution_range(query, now=None):
-    """Returns (low, median, high) hours - the 10th/50th/90th percentile
-    estimates from the three models"""
+    """Returns (low, median, high) hours - the 10th/50th/90th percentile"""
     encoded = encode_row(build_feature_row(query, now=now))
     low = predict_one(model_low, encoded)
     median = predict_one(model, encoded)
@@ -149,10 +145,6 @@ def format_duration(hours):
 
 
 def format_duration_range(low, high):
-    """Formats each bound in its own natural unit rather than forcing a
-    shared one - e.g. (22.6, 1423.6) becomes "about 23 hours to about 2
-    months", not "about 0 to 2 months" (which a shared month-based unit
-    would produce, silently hiding that the low end is really about a day)."""
     low_text = format_duration(low)
     high_text = format_duration(high)
     if low_text == high_text:

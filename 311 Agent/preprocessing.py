@@ -1,19 +1,12 @@
 """
-Helper functions to map user input to known categories for complaint_type and location_type. If the user input is not in the known categories, it is mapped to 'other' (or 'not specified' for location_type).
-It also derives time features (time_of_day, season, is_weekend) from the current time.
+Helper functions to map user input to known categories for complaint_type, location_type, and agency. If the user input is not in the known categories, it is mapped to 'other' (or 'not specified' for location_type; agency has no such bucket, so it maps to None).
+It also derives time features (time_of_day, is_weekend) from the current time.
 """
 
 from datetime import datetime
 
 
 DEFAULT_OPEN_DATA_CHANNEL_TYPE = 'online'
-
-SEASON_MAP = {
-    12: 'winter', 1: 'winter', 2: 'winter',
-    3: 'spring', 4: 'spring', 5: 'spring',
-    6: 'summer', 7: 'summer', 8: 'summer',
-    9: 'fall', 10: 'fall', 11: 'fall',
-}
 
 
 def _time_of_day(hour):
@@ -30,7 +23,6 @@ def derive_time_features(now=None):
     now = now or datetime.now()
     return {
         'time_of_day': _time_of_day(now.hour),
-        'season': SEASON_MAP[now.month],
         'is_weekend': int(now.weekday() >= 5),
     }
 
@@ -63,10 +55,11 @@ LOCATION_TYPE_MERGES = [
 ]
 
 
-def clean_agency(raw):
+def clean_agency(raw, known_categories):
     if not raw:
         return None
-    return raw.lower().strip()
+    value = raw.lower().strip()
+    return value if value in known_categories else None
 
 
 def clean_complaint_type(raw, known_categories):
