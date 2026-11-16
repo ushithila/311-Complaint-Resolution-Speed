@@ -61,7 +61,7 @@ def build_feature_row(query, now=None):
             getattr(query, 'complaint_type', None),
             KNOWN_CATEGORIES['Problem (formerly Complaint Type)'],
         ),
-        'Agency': clean_agency(getattr(query, 'agency', None)),
+        'Agency': clean_agency(getattr(query, 'agency', None), KNOWN_CATEGORIES['Agency']),
         'Location Type': clean_location_type(
             getattr(query, 'location_type', None),
             KNOWN_CATEGORIES['Location Type'],
@@ -139,10 +139,6 @@ def format_duration(hours):
 
 
 def format_duration_range(low, high):
-    """Formats each bound in its own natural unit rather than forcing a
-    shared one - e.g. (22.6, 1423.6) becomes "about 23 hours to about 2
-    months", not "about 0 to 2 months" (which a shared month-based unit
-    would produce, silently hiding that the low end is really about a day)."""
     low_text = format_duration(low)
     high_text = format_duration(high)
     if low_text == high_text:
