@@ -18,7 +18,7 @@ function SideBar( { conversations = [], activeId, onSelect, onNew } ){
   return ( 
     <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
       <div className="space-y-3 p-4">
-        <button onClick={onNew} className="flex w-full items-center justify-center gap-2 rounded-md bg-brand py-2 text-sm font-medium text-white">
+        <button onClick={onNew} className="flex w-full items-center justify-center gap-2 rounded-md bg-brand py-2 text-sm font-medium text-white transition-colors duration-200 ease-in-out hover:bg-navy">
           <Plus size={16} /> New prediction
         </button>
         <label className="flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 focus-within:border-brand">
