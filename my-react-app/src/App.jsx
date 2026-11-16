@@ -11,8 +11,9 @@ function App() {
   const [query, setQuery] = useState(null)
   const [pendingField, setPendingField] = useState(null)
 
-  async function handleSend(text) {
-    setMessages((m) => [...m, { role: "user", text }])
+  // text = what the backend receives, display = what the user sees in chat
+  async function handleSend(text, display = text) {
+    setMessages((m) => [...m, { role: "user", text: display }])
     setLoading(true)
     setError("")
 
@@ -22,7 +23,20 @@ function App() {
       if (result.status === "needs_clarification") {
         setQuery(result.query)
         setPendingField(result.pending_field)
-        setMessages((m) => [...m, { role: "assistant", text: result.message, options: result.options ?? null }])
+
+        const hasOptions = Array.isArray(result.options) && result.options.length > 0
+        setMessages((m) => [
+          ...m,
+          hasOptions
+            ? {
+                role: "assistant",
+                type: "form",
+                question: result.message,
+                helper: "Select one option, then submit to continue.",
+                options: result.options,
+              }
+            : { role: "assistant", text: result.message },
+        ])
         return
       }
 
@@ -30,11 +44,7 @@ function App() {
         const prediction = await getPrediction(result.query)
         setMessages((m) => [
           ...m,
-          {
-            role: "assistant",
-            type: "prediction",
-            text: `Estimated resolution time: ${prediction.estimate}`,
-          },
+          { role: "assistant", type: "prediction", text: `Estimated resolution time: ${prediction.estimate}` },
         ])
         setQuery(null)
         setPendingField(null)
@@ -51,7 +61,13 @@ function App() {
       <Header />
       <main className="flex min-h-0 flex-1">
         <Sidebar />
-        <ChatPanel messages={messages} loading={loading} error={error} onSend={handleSend} />
+        <ChatPanel
+          messages={messages}
+          loading={loading}
+          error={error}
+          onSend={handleSend}
+          onFormSubmit={(option) => handleSend(option.value, option.label)}
+        />
       </main>
     </div>
   )
