@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Avatar } from "./AssistantMessage";
 
-function Questionare( { id = "choice", question, helper, options = [], time, answer = null, onSubmit } ) {
-      const [selected, setSelected] = useState(answer)
-  const [locked, setLocked] = useState(answer !== null)
+function Questionare( { id = "choice", question, helper, options = [], time, answer = null, answered= false, onSubmit } ) {
+  const [selected, setSelected] = useState(answer)
+  const [submitted, setSubmitted] = useState(answer !== null)
+  const locked = submitted || answered
  
   function submit(e) {
     e.preventDefault()
     if (selected === null || locked) return
-    setLocked(true)
+    setSubmitted(true)
     onSubmit?.(options.find((o) => o.value === selected))
   }
  
@@ -19,7 +20,7 @@ function Questionare( { id = "choice", question, helper, options = [], time, ans
         <p className="mb-1 text-xs text-slate-500">
           NYC 311 Prediction Assistant{time && ` · ${time}`}
         </p>
-        <form onSubmit={submit} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <form onSubmit={submit} className={`rounded-xl border border-slate-200 bg-white p-4 shadow-sm ${locked ? "opacity-60" : ""}`}>
           <fieldset disabled={locked}>
             <legend className="text-sm font-semibold">{question}</legend>
             {helper && <p className="mt-1 text-xs text-slate-500">{helper}</p>}

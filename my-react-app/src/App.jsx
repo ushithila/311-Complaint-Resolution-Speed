@@ -2,6 +2,7 @@ import { useState } from 'react'
 import ChatPanel from './components/chat/ChatPanel'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
+import SignIn from './components/SignIn'
 import { sendMessage, getPrediction } from './api'
 
 function App() {
@@ -11,6 +12,8 @@ function App() {
   const [query, setQuery] = useState(null)
   const [pendingField, setPendingField] = useState(null)
   const [confirmed, setConfirmed] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [user, setUser] = useState(null)   // null = not chosen yet, { guest: true } or { email }
 
   // text = what the backend receives, display = what the user sees in chat
   async function handleSend(text, display = text) {
@@ -22,8 +25,9 @@ function App() {
     setError("")
 
     try {
-      const result = await sendMessage(text, query, pendingField, confirmed)
-
+      const result = await sendMessage(text, query, pendingField, confirmed, failedAttempts)
+      setFailedAttempts(0)
+      
       if (result.status === "needs_clarification") {
         setQuery(result.query)
         setPendingField(result.pending_field)
@@ -61,25 +65,50 @@ function App() {
         setConfirmed(false)
       }
     } catch (err) {
-      setError(err.message)
+      const detail = err.detail
+      if (err.status === 422 && detail?.failed_attempts != null) {
+        setFailedAttempts(detail.failed_attempts)
+        setMessages((m) => [
+          ...m,
+          detail.options?.length
+            ? {
+                role: "assistant",
+                type: "form",
+                question: detail.message,
+                helper: "Select one option, or describe the issue in your own words.",
+                options: detail.options,
+              }
+            : { role: "assistant", text: detail.message },
+        ])
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  return (
+return (
     <div className="flex h-screen flex-col">
-      <Header />
-      <main className="flex min-h-0 flex-1">
-        <Sidebar />
-        <ChatPanel
-          messages={messages}
-          loading={loading}
-          error={error}
-          onSend={handleSend}
-          onFormSubmit={(option) => handleSend(option.value, option.label)}
-        />
-      </main>
+      <Header signedIn={user && !user.guest} onSignIn={() => setUser(null)} />
+      {user === null ? (
+        <SignIn onSignIn={setUser} onGuest={() => setUser({ guest: true })} />
+      ) : (
+        <main className="flex min-h-0 flex-1">
+          <Sidebar />
+          <ChatPanel
+            messages={messages}
+            loading={loading}
+            error={error}
+            onSend={handleSend}
+            onFormSubmit={(option) => {
+              const lastMsg = messages[messages.length - 1]
+              if (lastMsg?.type !== "form" || lastMsg.answered) return
+              handleSend(option.value, option.label)
+            }}
+          />
+        </main>
+      )}
     </div>
   )
 }

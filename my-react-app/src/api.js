@@ -11,17 +11,17 @@ async function parseResponse(res) {
         ? detail
         : detail?.message ?? `Request failed (${res.status})`;
 
-    throw new Error(message);
+    throw Object.assign(new Error(message), { status: res.status, detail });
   }
 
   return data;
 }
 
-export async function sendMessage(text, query = null, pending_field = null, confirmed = false) {
+export async function sendMessage(text, query = null, pending_field = null, confirmed = false, failed_attempts = 0) {
   const res = await fetch(`${API_URL}/api/parse`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: text, query, pending_field, confirmed }),
+    body: JSON.stringify({ question: text, query, pending_field, confirmed, failed_attempts }),
   });
   return parseResponse(res);
 }

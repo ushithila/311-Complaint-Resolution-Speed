@@ -34,7 +34,7 @@ function Header( { signedIn, onSignIn, activeTab = "Prediction chat", initials =
                     <ChevronDown size={14} />
                 </button>
                 ) : (
-                <button onClick={onSignIn} className="rounded-md bg-brand px-4 py-1.5 font-medium text-white">
+                <button onClick={onSignIn} className="rounded-md bg-brand px-4 py-1.5 font-medium text-white hover: cursor-pointer">
                     Sign in
                 </button>
                 )}

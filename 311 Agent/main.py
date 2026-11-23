@@ -81,6 +81,7 @@ class ChatRequest(BaseModel):
     query: Query | None = None
     pending_field: str | None = None
     confirmed: bool = False
+    failed_attempts: int = Field(default=0, ge=0, le=50)
 
 class ChatResponse(BaseModel):
     status: str
@@ -110,6 +111,48 @@ REQUIRED_FIELDS = [
     "location_type",
     "open_data_channel_type",
 ]
+
+LLM_FALLBACK_AFTER = 1  # prior misses before we let the LLM decide
+HINT_AFTER = 2          # misses before we show chips
+
+# label = what the chip shows, value = what gets sent as the question.
+# Values are full phrases so they pass the keyword gate on their own.
+HINT_OPTIONS = [
+    {"label": "Noise",            "value": "Loud music or noise from a neighbor"},
+    {"label": "Heat / Hot water", "value": "No heat or hot water in my apartment building"},
+    {"label": "Street condition", "value": "Pothole on the road"},
+    {"label": "Illegal parking",  "value": "Car parked illegally blocking a driveway"},
+    {"label": "Rodents / Pests",  "value": "Rats in my building"},
+    {"label": "Trash / Sanitation", "value": "Garbage and litter on the sidewalk"},
+    {"label": "Streetlight",      "value": "Streetlight is out on my street"},
+    {"label": "Graffiti",         "value": "Graffiti on a building"},
+]
+
+
+def reject_unrecognized(failed_attempts: int) -> HTTPException:
+    attempts = failed_attempts + 1
+    detail = {
+        "message": "I can only estimate NYC 311 complaints. Describe the issue and where it "
+                   "happened, e.g. 'Streetlight out on 31st Ave in Queens.'",
+        "failed_attempts": attempts,
+    }
+    if attempts >= HINT_AFTER:
+        detail["message"] = (
+            "I'm still not sure what the issue is. Pick a category below, or try "
+            "something like 'Streetlight out on 31st Ave in Queens.'"
+        )
+        detail["options"] = HINT_OPTIONS
+    return HTTPException(status_code=422, detail=detail)
+
+
+def parse_if_complaint(question: str) -> Query | None:
+    """LLM fallback: returns a Query only if Gemini found a valid complaint_type."""
+    try:
+        query = parse_question(question)
+    except Exception:
+        logger.exception("LLM fallback parse failed")
+        return None
+    return query if (query.complaint_type or "").strip() else None
 
 VALID_PENDING_FIELDS = REQUIRED_FIELDS + ["confirmation"]
 CONFIRM_OPTIONS = ["Yes", "No"]
@@ -173,6 +216,7 @@ def home():
     return {"message": "NYC 311 Complaint Assistant API is running"}
 
 @app.post("/api/parse", response_model=ChatResponse)
+
 def parse_complaint(request: ChatRequest):
     debug_print(
         "INCOMING",
@@ -204,6 +248,18 @@ def handle_parse(request: ChatRequest) -> ChatResponse:
 
     # First message
     if request.query is None:
+        query = None
+        if looks_like_complaint(question):
+            try:
+                query = parse_question(question)
+            except Exception:
+                logger.exception("Failed to parse NYC 311 question")
+                raise HTTPException(status_code=502, detail="The AI service failed to process your question.")
+        elif request.failed_attempts >= LLM_FALLBACK_AFTER:
+            query = parse_if_complaint(question)
+
+        if query is None:
+            raise reject_unrecognized(request.failed_attempts)
         comparison = answer_comparison(question)
         if comparison is not None:
             return ChatResponse(
