@@ -4,8 +4,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from agent import Query, parse_question
-from predictor import predict_resolution_range, get_parser_categories, format_duration_range
+from agent import Query, parse_question, answer_comparison
+from predictor import predict_resolution_range, get_parser_categories, format_duration
 
 import re
 from functools import lru_cache
@@ -24,8 +24,8 @@ EXTRA_KEYWORDS = {
     "rat", "mice", "mouse", "roach", "cockroach", "pest", "bedbug", "rodent",
     "heat", "heating", "hot", "water", "leak", "mold", "paint", "lead",
     "elevator", "plumbing", "ceiling", "boiler", "landlord", "apartment",
-    "building", "tenant", "parking", "parked", "blocked", "driveway", "idling", 
-    "abandoned", "taxi", "bike", "vehicle", "car", "graffiti", "tree", "branch", 
+    "building", "tenant", "parking", "parked", "blocked", "driveway", "idling",
+    "abandoned", "taxi", "bike", "vehicle", "car", "graffiti", "tree", "branch",
     "park", "smoke", "smoking", "drug", "homeless", "311",
 }
 
@@ -91,6 +91,7 @@ class ChatResponse(BaseModel):
     message: str
     options: list[str] | None = None
     confirmed: bool = False
+    breakdown: list[dict] | None = None
 
 def get_channel_options() -> list[str]:
     return [
@@ -259,6 +260,27 @@ def handle_parse(request: ChatRequest) -> ChatResponse:
 
         if query is None:
             raise reject_unrecognized(request.failed_attempts)
+        comparison = answer_comparison(question)
+        if comparison is not None:
+            return ChatResponse(
+                status="comparison",
+                query=Query(),
+                missing_fields=[],
+                pending_field=None,
+                message=comparison["message"],
+                breakdown=comparison["breakdown"],
+            )
+
+        if not looks_like_complaint(question):
+            raise HTTPException(
+                status_code=422,
+                detail="I can only estimate NYC 311 complaints. Describe the issue and where it happened, e.g. 'Streetlight out on 31st Ave in Queens.'",
+            )
+        try:
+            query = parse_question(question)
+        except Exception:
+            logger.exception("Failed to parse NYC 311 question")
+            raise HTTPException(status_code=502, detail="The AI service failed to process your question.")
         confirmed = False
 
     # Follow-up messages
@@ -388,7 +410,11 @@ def predict_complaint(request: PredictionRequest):
             detail="Failed to generate a prediction.",
         )
 
-    return PredictionResponse(
-        low=low, median=median, high=high,
-        estimate=format_duration_range(low, high),
+    def strip_about(text):
+        return text.removeprefix("about ")
+
+    estimate = (
+        f"{format_duration(median)} — most complaints like this resolve "
+        f"between {strip_about(format_duration(low))} and {strip_about(format_duration(high))}"
     )
+    return PredictionResponse(low=low, median=median, high=high, estimate=estimate)
