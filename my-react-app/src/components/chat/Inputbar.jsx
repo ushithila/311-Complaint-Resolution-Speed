@@ -17,7 +17,7 @@ function InputBar( { value, onChange, onSend, disabled } ){
                 aria-label="Send message"
                 onClick={onSend}
                 disabled={disabled || !value.trim()}
-                className="grid h-8 w-8 place-items-center rounded-md bg-brand text-white disabled:opacity-40"
+                className="grid h-8 w-8 place-items-center rounded-md bg-brand text-white disabled:opacity-40 transition-colors duration-200 ease-in-out hover:bg-navy"
                 >
                 <ArrowUp size={16} />
                 </button>
