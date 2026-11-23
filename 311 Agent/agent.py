@@ -46,6 +46,13 @@ def parse_question(question: str, current_query: Query | None = None,) -> Query:
 
     complaint_type: the closest match from this list, exactly as written,
     or null if the message doesn't describe a 311 issue.
+    If the message describes noise from people or activity (loud music,
+    parties, shouting, barking dogs, equipment) at a home, business, or
+    street, you MUST use "noise - general". Use "noise" only when the
+    message does not describe people/activity noise.
+    If the message describes construction, plumbing, or building repair
+    work, you MUST use "general construction/plumbing". Use "general" only
+    when it does not describe that.
     {json.dumps(categories["complaint_type"])}
 
     agency: ALWAYS infer the responsible NYC agency from the complaint_type,

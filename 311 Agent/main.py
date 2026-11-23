@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from agent import Query, parse_question
-from predictor import predict_resolution_range, get_parser_categories, format_duration_range
+from predictor import predict_resolution_range, get_parser_categories, format_duration
 
 import re
 from functools import lru_cache
@@ -342,7 +342,11 @@ def predict_complaint(request: PredictionRequest):
             detail="Failed to generate a prediction.",
         )
 
-    return PredictionResponse(
-        low=low, median=median, high=high,
-        estimate=format_duration_range(low, high),
+    def strip_about(text):
+        return text.removeprefix("about ")
+
+    estimate = (
+        f"{format_duration(median)} — most complaints like this resolve "
+        f"between {strip_about(format_duration(low))} and {strip_about(format_duration(high))}"
     )
+    return PredictionResponse(low=low, median=median, high=high, estimate=estimate)
