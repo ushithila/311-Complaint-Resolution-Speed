@@ -11,6 +11,7 @@ function App() {
   const [query, setQuery] = useState(null)
   const [pendingField, setPendingField] = useState(null)
   const [confirmed, setConfirmed] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
 
   // text = what the backend receives, display = what the user sees in chat
   async function handleSend(text, display = text) {
@@ -22,8 +23,9 @@ function App() {
     setError("")
 
     try {
-      const result = await sendMessage(text, query, pendingField, confirmed)
-
+      const result = await sendMessage(text, query, pendingField, confirmed, failedAttempts)
+      setFailedAttempts(0)
+      
       if (result.status === "needs_clarification") {
         setQuery(result.query)
         setPendingField(result.pending_field)
@@ -61,7 +63,24 @@ function App() {
         setConfirmed(false)
       }
     } catch (err) {
-      setError(err.message)
+      const detail = err.detail
+      if (err.status === 422 && detail?.failed_attempts != null) {
+        setFailedAttempts(detail.failed_attempts)
+        setMessages((m) => [
+          ...m,
+          detail.options?.length
+            ? {
+                role: "assistant",
+                type: "form",
+                question: detail.message,
+                helper: "Select one option, or describe the issue in your own words.",
+                options: detail.options,
+              }
+            : { role: "assistant", text: detail.message },
+        ])
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -77,7 +96,11 @@ function App() {
           loading={loading}
           error={error}
           onSend={handleSend}
-          onFormSubmit={(option) => handleSend(option.value, option.label)}
+          onFormSubmit={(option) => {
+            const lastMsg = messages[messages.length - 1]
+            if (lastMsg?.type !== "form" || lastMsg.answered) return
+            handleSend(option.value, option.label)
+          }}
         />
       </main>
     </div>
