@@ -132,7 +132,7 @@ function SignIn({ onSignIn, onGuest, onCreateAccount }) {
 
             {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
-            <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand py-2.5 text-sm font-semibold text-white">
+            <button type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand py-2.5 text-sm font-semibold text-white transition-colors duration-200 ease-in-out hover:bg-navy cursor-pointer">
               Sign in <ArrowRight size={16} />
             </button>
 
@@ -143,7 +143,7 @@ function SignIn({ onSignIn, onGuest, onCreateAccount }) {
             <button
               type="button"
               onClick={() => onGuest?.()}
-              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
             >
               Continue as guest
             </button>
@@ -153,7 +153,7 @@ function SignIn({ onSignIn, onGuest, onCreateAccount }) {
               <button
                 type="button"
                 onClick={() => onCreateAccount?.()}
-                className="w-full rounded-lg bg-blue-50 py-2.5 text-sm font-semibold text-brand hover:bg-blue-100"
+                className="w-full rounded-lg bg-blue-50 py-2.5 text-sm font-semibold text-brand hover:bg-blue-100 cursor-pointer"
               >
                 Create an account
               </button>
@@ -161,7 +161,7 @@ function SignIn({ onSignIn, onGuest, onCreateAccount }) {
 
             <p className="text-center text-xs text-slate-500">
               By signing in, you agree to our <button type="button" className="text-brand hover:underline">Terms of use</button> and{" "}
-              <button type="button" className="text-brand hover:underline">Privacy policy</button>.
+              <button type="button" className="text-brand hover:underline cursor-pointer">Privacy policy</button>.
             </p>
           </form>
         </div>
