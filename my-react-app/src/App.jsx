@@ -2,6 +2,7 @@ import { useState } from 'react'
 import ChatPanel from './components/chat/ChatPanel'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
+import SignIn from './components/SignIn'
 import { sendMessage, getPrediction } from './api'
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
   const [pendingField, setPendingField] = useState(null)
   const [confirmed, setConfirmed] = useState(false)
   const [failedAttempts, setFailedAttempts] = useState(0)
+  const [user, setUser] = useState(null)   // null = not chosen yet, { guest: true } or { email }
 
   // text = what the backend receives, display = what the user sees in chat
   async function handleSend(text, display = text) {
@@ -86,23 +88,27 @@ function App() {
     }
   }
 
-  return (
+return (
     <div className="flex h-screen flex-col">
-      <Header />
-      <main className="flex min-h-0 flex-1">
-        <Sidebar />
-        <ChatPanel
-          messages={messages}
-          loading={loading}
-          error={error}
-          onSend={handleSend}
-          onFormSubmit={(option) => {
-            const lastMsg = messages[messages.length - 1]
-            if (lastMsg?.type !== "form" || lastMsg.answered) return
-            handleSend(option.value, option.label)
-          }}
-        />
-      </main>
+      <Header signedIn={user && !user.guest} onSignIn={() => setUser(null)} />
+      {user === null ? (
+        <SignIn onSignIn={setUser} onGuest={() => setUser({ guest: true })} />
+      ) : (
+        <main className="flex min-h-0 flex-1">
+          <Sidebar />
+          <ChatPanel
+            messages={messages}
+            loading={loading}
+            error={error}
+            onSend={handleSend}
+            onFormSubmit={(option) => {
+              const lastMsg = messages[messages.length - 1]
+              if (lastMsg?.type !== "form" || lastMsg.answered) return
+              handleSend(option.value, option.label)
+            }}
+          />
+        </main>
+      )}
     </div>
   )
 }
