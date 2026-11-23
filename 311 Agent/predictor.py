@@ -90,12 +90,13 @@ def predict_resolution_hours(query, now=None):
 
 
 def predict_resolution_range(query, now=None):
-    """Returns (low, median, high) hours - the 10th/50th/90th percentile"""
+    """Returns (low, median, high) hours - the 10th/50th/90th percentile."""
     encoded = encode_row(build_feature_row(query, now=now))
-    low = predict_one(model_low, encoded)
+    raw_low = predict_one(model_low, encoded)
     median = predict_one(model, encoded)
-    high = predict_one(model_high, encoded)
-    low, median, high = sorted([low, median, high])
+    raw_high = predict_one(model_high, encoded)
+    low = min(raw_low, raw_high, median)
+    high = max(raw_low, raw_high, median)
     return low, median, high
 
 def get_parser_categories():
