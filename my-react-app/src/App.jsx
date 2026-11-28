@@ -3,6 +3,7 @@ import ChatPanel from './components/chat/ChatPanel'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import SignIn from './components/SignIn'
+import CreateAccount from './components/CreateAccount'
 import { sendMessage, getPrediction } from './api'
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
   const [pendingField, setPendingField] = useState(null)
   const [confirmed, setConfirmed] = useState(false)
   const [failedAttempts, setFailedAttempts] = useState(0)
+  const [authView, setAuthView] = useState("signin")   // "signin" | "create"
   const [user, setUser] = useState(null)   // null = not chosen yet, { guest: true } or { email }
 
   // text = what the backend receives, display = what the user sees in chat
@@ -90,9 +92,17 @@ function App() {
 
 return (
     <div className="flex h-screen flex-col">
-      <Header signedIn={user && !user.guest} onSignIn={() => setUser(null)} />
+      <Header signedIn={user && !user.guest} onSignIn={() => { setUser(null); setAuthView("signin") }} />
       {user === null ? (
-        <SignIn onSignIn={setUser} onGuest={() => setUser({ guest: true })} />
+        authView === "signin" ? (
+          <SignIn
+            onSignIn={setUser}
+            onGuest={() => setUser({ guest: true })}
+            onCreateAccount={() => setAuthView("create")}
+          />
+        ) : (
+          <CreateAccount onCreate={setUser} onSignIn={() => setAuthView("signin")} />
+        )
       ) : (
         <main className="flex min-h-0 flex-1">
           <Sidebar />
